@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 256 256" width="256" height="256">
+  <!-- Galaxy宝可梦 图标：等距六边形环（上右红、左下米色）+ 中心小立方体。按服主提供的图重绘。 -->
+  <title>Galaxy宝可梦</title>
+  <!-- 厚度（侧面，向下偏移 14） -->
+  <g transform="translate(0 14)">
+    <path d="M92 38 L128 17 L222 71 L222 176 L178 150 L178 101 L128 72 L104 86 Z" fill="#7d241d"/>
+    <path d="M76 47 L34 71 L34 185 L128 239 L210 192 L178 160 L128 184 L80 156 L80 100 L96 91 Z" fill="#c9ab78"/>
+  </g>
+  <!-- 正面 -->
+  <path d="M92 38 L128 17 L222 71 L222 176 L178 150 L178 101 L128 72 L104 86 Z" fill="#b5332a"/>
+  <path d="M128 17 L222 71 L210 78 L128 31 L101 47 L92 38 Z" fill="#cf4a3c"/>
+  <path d="M76 47 L34 71 L34 185 L128 239 L210 192 L178 160 L128 184 L80 156 L80 100 L96 91 Z" fill="#f2deb3"/>
+  <path d="M34 71 L76 47 L84 56 L47 78 L47 178 L34 185 Z" fill="#fbecc9"/>
+  <!-- 中心小立方体 -->
+  <path d="M128 99 L152 113 L152 141 L128 155 L104 141 L104 113 Z" fill="#c9ab78"/>
+  <path d="M128 99 L152 113 L128 127 L104 113 Z" fill="#fbecc9"/>
+  <path d="M104 113 L128 127 L128 155 L104 141 Z" fill="#f2deb3"/>
+  <path d="M128 99 L152 113 L152 141 L128 155 L104 141 L104 113 Z" fill="none" stroke="#8f7650" stroke-width="3" stroke-linejoin="round"/>
+</svg>

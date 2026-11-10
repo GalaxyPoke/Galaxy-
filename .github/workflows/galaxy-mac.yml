@@ -1,0 +1,105 @@
+# Galaxy宝可梦 启动器 Mac 版（Apple 芯片 + Intel 通用 dmg）
+#
+# 手动触发：仓库 Actions → Galaxy Mac build → Run workflow。
+# 整合包太大，放不进仓库：先把 .minecraft 打成 tar 分卷（galaxy-mc-mac.tar.partNN + galaxy-mc-mac.sha256），
+# 传到一个草稿 Release（标签填在 modpack_tag），这里下载、校验、拼回，再交给 galaxy-build-mac.sh。
+# 产物在本次运行页面底部的 Artifacts 里（保留 7 天）。
+name: Galaxy Mac build
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: '版本号，例如 1.0.7（留空则用 apps/app-frontend/package.json 里的）'
+        required: false
+        default: ''
+      modpack_tag:
+        description: '放整合包分卷的 Release 标签'
+        required: true
+        default: mac-modpack
+
+# 草稿 Release 只有带写权限的令牌才看得到
+permissions:
+  contents: write
+
+concurrency:
+  group: galaxy-mac
+  cancel-in-progress: false
+
+jobs:
+  dmg:
+    name: Mac dmg
+    runs-on: macos-15
+    timeout-minutes: 300
+    env:
+      SQLX_OFFLINE: 'true'
+      npm_config_registry: https://registry.npmjs.org
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Free disk space
+        run: |
+          df -h /
+          sudo rm -rf "$HOME/Library/Android" /usr/local/share/dotnet "$HOME/.dotnet" || true
+          df -h /
+
+      - uses: pnpm/action-setup@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+
+      - uses: actions/setup-java@v4
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Rust toolchain
+        run: |
+          rustup toolchain install || rustup show
+          rustup target add aarch64-apple-darwin x86_64-apple-darwin
+          rustc -V
+
+      - uses: Swatinem/rust-cache@v2
+        with:
+          cache-on-failure: true
+
+      - name: Download modpack
+        env:
+          GH_TOKEN: ${{ github.token }}
+          MODPACK_TAG: ${{ inputs.modpack_tag }}
+        run: |
+          set -euo pipefail
+          api="https://api.github.com/repos/$GITHUB_REPOSITORY"
+          auth=(-H "Authorization: Bearer $GH_TOKEN" -H "X-GitHub-Api-Version: 2022-11-28")
+          rel=$(curl -fsSL "${auth[@]}" -H "Accept: application/vnd.github+json" "$api/releases?per_page=100" \
+            | jq -c --arg t "$MODPACK_TAG" 'map(select(.tag_name == $t)) | .[0]')
+          if [ "$rel" = "null" ]; then echo "::error::没找到标签为 $MODPACK_TAG 的 Release"; exit 1; fi
+          parts="$RUNNER_TEMP/parts"
+          mc="$RUNNER_TEMP/mc"
+          mkdir -p "$parts" "$mc"
+          jq -r '.assets[] | select(.name | startswith("galaxy-mc-mac.")) | "\(.id) \(.name)"' <<<"$rel" \
+            | while read -r id name; do
+                echo "下载 $name"
+                curl -fL --retry 5 --retry-delay 15 "${auth[@]}" -H "Accept: application/octet-stream" \
+                  -o "$parts/$name" "$api/releases/assets/$id"
+              done
+          (cd "$parts" && shasum -a 256 -c galaxy-mc-mac.sha256)
+          cat "$parts"/galaxy-mc-mac.tar.part* | tar -x -C "$mc"
+          rm -rf "$parts"
+          du -sh "$mc/.minecraft"
+          df -h /
+
+      - name: Build dmg
+        env:
+          VERSION: ${{ inputs.version }}
+        run: bash galaxy-build-mac.sh "$RUNNER_TEMP/mc/.minecraft" "$VERSION"
+
+      - uses: actions/upload-artifact@v4
+        with:
+          name: galaxy-mac-dmg
+          path: dist-mac/*.dmg
+          compression-level: 0
+          retention-days: 7
+          if-no-files-found: error
