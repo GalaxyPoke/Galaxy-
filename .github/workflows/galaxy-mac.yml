@@ -42,6 +42,8 @@ jobs:
         run: |
           df -h /
           sudo rm -rf "$HOME/Library/Android" /usr/local/share/dotnet "$HOME/.dotnet" || true
+          # Spotlight 索引是 hdiutil 偶发 "Resource busy" 的常见原因
+          sudo mdutil -a -i off || true
           df -h /
 
       - uses: pnpm/action-setup@v4

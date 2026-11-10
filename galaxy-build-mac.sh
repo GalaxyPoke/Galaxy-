@@ -73,6 +73,12 @@ mkdir -p "$STAGE"
 ditto "$APP" "$STAGE/$APP_NAME.app"
 ln -s /Applications "$STAGE/Applications"
 cp GALAXY_MAC_PLAYERS.txt "$STAGE/打不开时看这里.txt"
-hdiutil create -volname "$APP_NAME" -srcfolder "$STAGE" -ov -format UDZO "$DMG"
+# GitHub 的 Mac 机器上 hdiutil 偶尔报 "Resource busy"，重试几次
+for i in 1 2 3 4 5; do
+  hdiutil create -volname "$APP_NAME" -srcfolder "$STAGE" -ov -format UDZO "$DMG" && break
+  [ "$i" -lt 5 ] || die "hdiutil 生成 dmg 失败"
+  echo "hdiutil 失败，15 秒后重试（第 $i 次）"
+  sleep 15
+done
 rm -rf "$STAGE"
 echo "完成：$DMG（$(du -h "$DMG" | cut -f1)）"
