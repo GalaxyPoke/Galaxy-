@@ -21,7 +21,7 @@ die() { echo "错误：$*" >&2; exit 1; }
 [ -n "$GAME_DIR" ] || die "请传入整合包的 .minecraft 目录，例如：bash galaxy-build-mac.sh ../mac-client/.minecraft"
 [ -f "$GAME_DIR/versions/$VERSION_ID/$VERSION_ID.json" ] || die "$GAME_DIR 里没有版本 $VERSION_ID"
 for tool in cargo rustup node pnpm; do
-  command -v "$tool" >/dev/null 2>&1 || die "缺少 $tool，按 GALAXY_MAC.md 的「准备」安装"
+  command -v "$tool" >/dev/null 2>&1 || die "缺少 ${tool}，按 GALAXY_MAC.md 的「准备」安装"
 done
 xcode-select -p >/dev/null 2>&1 || die "缺少 Xcode 命令行工具，先运行 xcode-select --install"
 if [ -z "${JAVA_HOME:-}" ]; then
@@ -32,7 +32,7 @@ if [ -z "$VERSION" ]; then
   VERSION="$(node -p "require('./apps/app-frontend/package.json').version")"
 fi
 VERSION_RE='^[0-9]+(\.[0-9]+){1,3}$'
-[[ "$VERSION" =~ $VERSION_RE ]] || die "版本号格式不对：$VERSION（例如 1.0.7）"
+[[ "$VERSION" =~ $VERSION_RE ]] || die "版本号格式不对：${VERSION}（例如 1.0.7）"
 
 export AXOLOTL_SKIP_BLOCKBENCH_BUILD=1
 export npm_config_registry="${npm_config_registry:-https://registry.npmmirror.com}"
@@ -81,4 +81,4 @@ for i in 1 2 3 4 5; do
   sleep 15
 done
 rm -rf "$STAGE"
-echo "完成：$DMG（$(du -h "$DMG" | cut -f1)）"
+echo "完成：${DMG}（$(du -h "$DMG" | cut -f1)）"
